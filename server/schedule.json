@@ -1,0 +1,19 @@
+{
+  "_help": "Edit this file to set your own films and showtimes. See SCHEDULE-HELP.md. Restart the server after editing.",
+  "timezone": "Asia/Kolkata",
+  "mode": "loop",
+  "gapMinutes": 3,
+  "preShowSeconds": 120,
+  "films": [
+    {
+      "id": "demo",
+      "title": "Cinemaverse Demo Reel",
+      "description": "A 60-second reel made by the game itself. Replace it with your own film.",
+      "year": 2026,
+      "url": null,
+      "durationSec": 60,
+      "hue": 28
+    }
+  ],
+  "daily": []
+}

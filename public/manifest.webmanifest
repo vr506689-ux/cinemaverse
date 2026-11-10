@@ -1,0 +1,9 @@
+{
+  "name": "Cinemaverse",
+  "short_name": "Cinemaverse",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#3a0f19",
+  "theme_color": "#3a0f19"
+}
