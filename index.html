@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#3a0f19" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>CINEMAVERSE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700&family=Limelight&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="videoOverlay" class="vid-overlay hidden"></div>
+
+  <!-- MAIN MENU -->
+  <div id="menu" class="screen">
+    <main class="ticket" id="ticket">
+      <header class="ticket-head">
+        <p class="admit">Admit one</p>
+        <h1 class="logo">Cinemaverse</h1>
+        <p class="tagline">Walk in, find a seat, and watch together.</p>
+      </header>
+      <div class="perf" id="perf"></div>
+      <section class="ticket-body">
+        <label class="field">
+          <span>Your name</span>
+          <input id="nameInput" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Pick a name (2-16 letters)" />
+        </label>
+        <div class="field">
+          <span>Shirt colour</span>
+          <div class="swatches" id="swatches" role="radiogroup" aria-label="Shirt colour"></div>
+        </div>
+        <p class="error" id="nameError" role="alert"></p>
+        <button class="btn primary" id="enterBtn">Enter the public cinema</button>
+        <p class="note" id="inviteNote" hidden></p>
+        <p class="note" id="touchNote" hidden>Phone controls arrive in Phase 7. For now, use a laptop or desktop with a keyboard and mouse.</p>
+        <div class="grid">
+          <button class="btn ghost" id="browseBtn">Browse public rooms</button>
+          <button class="btn ghost" id="createBtn">Create a room</button>
+          <button class="btn ghost" id="joinBtn">Join with a code</button>
+          <button class="btn ghost" id="soloBtn">Practice alone</button>
+          <button class="btn ghost" id="menuSettings">Settings</button>
+          <button class="btn ghost" id="menuAbout">About</button>
+          <button class="btn ghost wide" disabled>Log in or register <em>Phase 6</em></button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ROOMS -->
+  <div id="rooms" class="screen hidden"><div class="panel wide">
+    <h2>Public rooms</h2><p id="roomsInfo" class="sub"></p>
+    <div id="roomList" class="roomlist"></div>
+    <p class="error" id="roomsErr" role="alert"></p>
+    <div class="row"><button class="btn primary" id="quickJoin">Quick join</button><button class="btn ghost" id="roomsRefresh">Refresh</button><button class="btn ghost" id="roomsBack">Back</button></div>
+  </div></div>
+  <div id="createRoom" class="screen hidden"><div class="panel">
+    <h2>Create a room</h2>
+    <label class="field"><span>Room name</span><input id="crName" maxlength="30" autocomplete="off" placeholder="Friday movie night" /></label>
+    <div class="field"><span>Who can find it</span><div class="seg" id="crVis"><button data-v="private" aria-pressed="true">Private (code only)</button><button data-v="public" aria-pressed="false">Public (listed)</button></div></div>
+    <label class="field"><span>Max players</span><select id="crMax"><option>4</option><option>6</option><option selected>10</option><option>15</option><option>20</option></select></label>
+    <label class="field"><span>Password (optional)</span><input id="crPw" type="password" maxlength="32" autocomplete="new-password" /></label>
+    <p class="error" id="crErr" role="alert"></p>
+    <button class="btn primary" id="crGo">Create room</button><button class="btn ghost" id="crBack">Back</button>
+  </div></div>
+  <div id="joinRoom" class="screen hidden"><div class="panel">
+    <h2>Join with a code</h2>
+    <label class="field"><span>Room code</span><input id="jrCode" maxlength="12" autocomplete="off" placeholder="CINE-48291" /></label>
+    <label class="field hidden" id="jrPwField"><span>Password</span><input id="jrPw" type="password" maxlength="32" autocomplete="off" /></label>
+    <p class="error" id="jrErr" role="alert"></p>
+    <button class="btn primary" id="jrGo">Join</button><button class="btn ghost" id="jrBack">Back</button>
+  </div></div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-card hud-top"><strong>Cinemaverse</strong><span id="zone">Main lobby</span></div>
+    <div class="hud-card hud-keys">
+      <b>W A S D</b> move &nbsp; <b>Shift</b> run &nbsp; <b>Space</b> jump &nbsp; <b>Mouse</b> look<br />
+      <b>V</b> first / third person &nbsp; <b>Scroll</b> camera distance &nbsp; <b>E</b> interact or sit &nbsp; <b>1-4</b> wave, clap, dance, cheer &nbsp; <b>Esc</b> pause
+    </div>
+    <button id="showChip" class="hud-card chipbtn hidden"></button>
+    <div id="roomCard" class="hud-card hud-room hidden"><b id="rcName"></b><span id="rcCode"></span><button id="rcCopy" class="mini">Copy invite link</button></div>
+    <div id="prompt" class="prompt hidden"><kbd>E</kbd><span id="promptText"></span></div>
+    <div id="toast" class="toast hidden"></div>
+    <div id="dot" class="dot hidden"></div>
+
+    <div class="hud-bar">
+      <button id="playersBtn" class="hbtn hidden" aria-expanded="false">Players <span id="playerCount">1</span></button>
+      <button id="micBtn" class="hbtn hidden">Mic</button><button id="micLeave" class="hbtn hidden" aria-label="Leave voice" title="Leave voice">&times;</button>
+      <button id="chatBtn" class="hbtn" aria-expanded="false">Chat <kbd>C</kbd><span id="chatBadge" class="badge hidden">1</span></button>
+      <button id="movieBtn" class="hbtn" aria-expanded="false">Movie <kbd>M</kbd></button>
+      <button id="theatreBtn" class="hbtn">Theatre <kbd>T</kbd></button>
+      <button id="fsBtn" class="hbtn">Fullscreen <kbd>F</kbd></button>
+      <button id="hideBtn" class="hbtn">Hide UI <kbd>H</kbd></button>
+      <button id="menuBtn" class="hbtn">Menu</button>
+    </div>
+
+    <div id="theatreBar" class="tbar hidden">
+      <button id="tbUi" class="hbtn">Show controls</button><button id="tbTheatre" class="hbtn">Theatre view</button><button id="tbFs" class="hbtn">Fullscreen</button>
+      <label class="tvol">Volume <input id="tbVol" type="range" min="0" max="1" step="0.05" value="0.8" /></label>
+    </div>
+
+    <div id="chat" class="chat hidden" role="dialog" aria-label="Chat">
+      <div class="panel-head"><strong>Chat</strong><button id="chatClose" class="x" aria-label="Close chat">&times;</button></div>
+      <div id="chatLog" class="chat-log" aria-live="polite"></div>
+      <div class="chat-send"><input id="chatInput" maxlength="200" autocomplete="off" placeholder="Say something... (/w Name message = private)" /><button id="chatSend" class="btn primary small">Send</button></div>
+    </div>
+
+    <div id="playersPanel" class="chat playersp hidden" role="dialog" aria-label="Players">
+      <div class="panel-head"><strong>Players</strong><button id="playersClose" class="x" aria-label="Close players">&times;</button></div>
+      <div id="playersList" class="chat-log"></div>
+    </div>
+
+    <div id="moviePanel" class="mpanel hidden" role="dialog" aria-label="Movie controls">
+      <div class="panel-head"><strong>Movie controls</strong><button id="movieClose" class="x" aria-label="Close movie controls">&times;</button></div>
+      <p id="movieStatus" class="mstatus">Nothing playing. Pick a film below and the lights will go down.</p>
+      <div id="mpSolo">
+      <div class="mrow"><button id="demoBtn" class="btn primary small">Play demo reel</button>
+        <label class="btn ghost small filebtn">Open a video file<input id="fileInput" type="file" accept="video/*" hidden /></label></div>
+      <div class="mrow"><input id="urlInput" placeholder="Direct video link (https://... .mp4)" /><button id="urlBtn" class="btn ghost small">Play</button></div>
+      <div class="mrow transport"><button id="playPause" class="btn ghost small" disabled>Pause</button><button id="stopBtn" class="btn ghost small" disabled>Stop</button>
+        <input id="seek" type="range" min="0" max="1000" value="0" disabled aria-label="Seek" /><span id="timeText">0:00</span></div>
+      </div>
+      <div id="mpSchedule" class="hidden"><div id="schedList" class="sched"></div></div>
+      <div id="mpHost" class="hidden">
+        <div class="mrow"><select id="hostFilm" aria-label="Film"></select><button id="hostSet" class="btn ghost small">Load</button></div>
+        <div class="mrow"><input id="hostUrl" placeholder="or a direct https video link" /><button id="hostUrlBtn" class="btn ghost small">Load</button></div>
+        <div class="mrow transport"><button id="hostPlay" class="btn primary small">Play</button><button id="hostStop" class="btn ghost small">Stop</button><input id="hostSeek" type="range" min="0" max="1000" value="0" aria-label="Seek" /><span id="hostTime">0:00</span></div>
+      </div>
+      <div class="mrow"><span class="lbl">Volume</span><input id="volume" type="range" min="0" max="1" step="0.05" value="0.8" /></div>
+      <small id="movieNote">Only play videos you have the right to watch. Streaming sites like Netflix or YouTube links will not work.</small>
+    </div>
+
+    <div id="touchUI" class="hidden">
+      <div id="joy" class="joy hidden"><div id="knob" class="knob"></div></div>
+      <button id="tJump" class="tbtn">Jump</button>
+      <button id="tRun" class="tbtn">Run</button>
+      <button id="tUse" class="tbtn use hidden">Use</button>
+      <button id="tView" class="tbtn small">View</button>
+      <button id="tEmote" class="tbtn small">Emote</button>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="pause" class="screen hidden">
+    <div class="panel">
+      <h2>Paused</h2>
+      <button class="btn primary" id="resumeBtn">Back to the cinema</button>
+      <button class="btn ghost" id="pauseSettings">Settings</button>
+      <button class="btn ghost" id="leaveBtn">Leave to main menu</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settings" class="screen hidden">
+    <div class="panel">
+      <h2>Settings</h2>
+      <div class="field">
+        <span>Graphics quality</span>
+        <div class="seg" id="qualitySeg">
+          <button data-q="low">Low</button><button data-q="medium">Medium</button><button data-q="high">High</button>
+        </div>
+        <small>Low is best for older laptops. The game also lowers it by itself if it runs slowly.</small>
+      </div>
+      <div class="field" id="lookField">
+        <span>Mouse look</span>
+        <div class="seg" id="lookSeg"><button data-l="drag">Hold and drag</button><button data-l="lock">Locked cursor</button></div>
+        <small>Hold and drag keeps your cursor free so you can always click Chat and Movie.</small>
+      </div>
+      <div class="field"><span>Voice chat</span><div class="seg" id="voiceSeg"><button data-v="open">Open mic</button><button data-v="ptt">Push to talk (hold B)</button></div><small>Voice needs a microphone and an https page (or localhost).</small></div>
+      <label class="field"><span>Brightness</span><input type="range" id="exposure" min="0.5" max="2" step="0.05" /></label>
+      <label class="field"><span>Mouse speed</span><input type="range" id="sens" min="0.4" max="2.5" step="0.05" /></label>
+      <button class="btn primary" id="settingsClose">Done</button>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div id="about" class="screen hidden">
+    <div class="panel wide">
+      <h2>About Cinemaverse</h2>
+      <p>A free, open-source virtual cinema you play in the browser. This is <b>Phase 1</b>: the 3D lobby and auditorium, a walkable character, camera and collisions.</p>
+      <p>Coming next: richer cinema detail (Phase 2), multiplayer rooms (Phase 3), synced video on the big screen (Phase 4), chat and voice (Phase 5), accounts and friends (Phase 6), phone controls (Phase 7).</p>
+      <p>The film posters show made-up titles. Everything in the 3D world is generated by code, so there are no third-party model or texture licences to worry about. Built with Three.js (MIT licence).</p>
+      <button class="btn primary" id="aboutClose">Close</button>
+    </div>
+  </div>
+
+  <div id="fatal" class="screen hidden"><div class="panel"><h2>This browser can't run the 3D world</h2><p id="fatalMsg">WebGL is not available. Try the latest Chrome, Edge or Firefox, and make sure hardware acceleration is on.</p></div></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
