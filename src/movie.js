@@ -71,11 +71,20 @@ export function createMovie({ screenMesh, idleTexture, overlayEl, onChange, onEr
   video.addEventListener('ended', () => { if (mode === 'video') stop(); });
   video.addEventListener('error', () => {
     if (!video.getAttribute('src')) return;
-    if ((mode === 'video' || mode === 'live-video') && !triedPlain) { // the website may not allow the 3D screen: show the film in a small window instead
-      triedPlain = true; showOverlay(); onNotice && onNotice('This film plays in a small window, because its website does not allow the 3D screen.'); loadSrc(curSrc, true); return;
+    // Do not retry without CORS and move the video into a floating overlay.
+    // A non-CORS video may play as a normal HTML element, but cannot be sampled
+    // by WebGL/Three.VideoTexture. Keep the cinema screen path honest instead.
+    const code = video.error?.code;
+    const detail = code === 2 ? 'A network error interrupted the video.'
+      : code === 3 ? 'The browser could not decode this video. Try an H.264 MP4.'
+      : code === 4 ? 'The video format or server response is not supported.'
+      : 'The browser could not load the video.';
+    const msg = `${detail} For the 3D theatre screen, the video host must allow CORS from your CINEMAVERSE website. Try a CORS-enabled direct MP4/WebM link.`;
+    const wasLive = mode === 'live-video';
+    if (wasLive) {
+      onError && onError(msg); liveKey = null; mode = 'none'; state = 'idle'; loading = false;
+      hideOverlay(); setMap(idleTexture); emit(); return;
     }
-    const wasLive = mode === 'live-video'; const msg = "This video can't be played. Check the link points straight to a .mp4 or .webm file.";
-    if (wasLive) { onError && onError(msg); liveKey = null; mode = 'none'; hideOverlay(); setMap(idleTexture); return; }
     stop(); onError && onError(msg);
   });
 
